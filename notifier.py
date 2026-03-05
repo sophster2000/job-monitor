@@ -7,9 +7,18 @@ from config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, 
 _client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
+def send_message(body: str) -> None:
+    """Send a plain WhatsApp message."""
+    _client.messages.create(
+        from_=TWILIO_WHATSAPP_FROM,
+        to=TWILIO_WHATSAPP_TO,
+        body=body,
+    )
+
+
 def send_whatsapp(job: dict, score: float, reason: str) -> None:
     title = job.get("title", "Unknown role")
-    company = job.get("company", "Unknown company")
+    company = job.get("company", "")
     location = job.get("location", "")
     url = job.get("url", "")
     source = job.get("source", "")
@@ -26,11 +35,5 @@ def send_whatsapp(job: dict, score: float, reason: str) -> None:
     if url:
         lines.append(f"Link: {url}")
 
-    body = "\n".join(lines)
-
-    _client.messages.create(
-        from_=TWILIO_WHATSAPP_FROM,
-        to=TWILIO_WHATSAPP_TO,
-        body=body,
-    )
+    send_message("\n".join(lines))
     print(f"[Notifier] Sent WhatsApp for: {title} ({score:.1f}/10)")

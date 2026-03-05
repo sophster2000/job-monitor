@@ -5,11 +5,10 @@ Scrapes job listings from LinkedIn (Apify), Indeed (Apify), and a set of
 URL-based job boards, scores each listing against your CV using Claude,
 and sends WhatsApp notifications via Twilio for relevant matches.
 """
-import sys
 from scrapers import scrape_linkedin, scrape_indeed, scrape_url
 from matcher import is_relevant, is_dutch_only
 from notifier import send_whatsapp
-from storage import is_seen, mark_seen, make_id
+from storage import is_seen, mark_seen, make_id, log_run
 from config import SCRAPE_URLS, RELEVANCE_THRESHOLD
 
 
@@ -91,6 +90,8 @@ def main():
             total_matched += matched
         except Exception as e:
             print(f"[WebScraper] Failed for {url}: {e}")
+
+    log_run(total_new, total_matched)
 
     print("=" * 60)
     print(f"Done. New jobs seen: {total_new} | Matches notified: {total_matched}")

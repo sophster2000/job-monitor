@@ -11,7 +11,7 @@ _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 # Common Dutch words — if the description is overwhelmingly these, it's Dutch-only
 _DUTCH_MARKERS = re.compile(
-    r"\b(wij|jij|zijn|heeft|voor|naar|een|het|van|met|wat|als|maar|ook|dan|bij|aan|dat|wordt|kan|bent|heb|onze|onze|zoeken|gevraagd|vereist|ervaring|werken|functie|vacature|solliciteer|bedrijf|omgeving|team|salaris|werkgever|fulltime|parttime)\b",
+    r"\b(wij|jij|zijn|heeft|voor|naar|een|het|van|met|wat|als|maar|ook|dan|bij|aan|dat|wordt|kan|bent|heb|onze|zoeken|gevraagd|vereist|ervaring|werken|functie|vacature|solliciteer|bedrijf|omgeving|team|salaris|werkgever|fulltime|parttime)\b",
     re.IGNORECASE,
 )
 _ENGLISH_MARKERS = re.compile(
@@ -22,15 +22,11 @@ _ENGLISH_MARKERS = re.compile(
 
 def is_dutch_only(job: dict) -> bool:
     """Return True if the job description appears to be Dutch-only."""
-    text = " ".join([
-        job.get("title", ""),
-        job.get("description", ""),
-    ])
+    text = " ".join([job.get("title", ""), job.get("description", "")])
     if len(text.strip()) < 20:
-        return False  # Not enough text to decide — let it through
+        return False
     dutch_hits = len(_DUTCH_MARKERS.findall(text))
     english_hits = len(_ENGLISH_MARKERS.findall(text))
-    # Consider Dutch-only if Dutch hits dominate and English is sparse
     return dutch_hits > 5 and english_hits < 3
 
 
@@ -82,18 +78,22 @@ Job Listing:
 
 ---
 
-Important language criteria:
-- Sophie's Dutch is B1 level (intermediate). She is a native English speaker.
-- Strongly prefer jobs that are conducted primarily in English or require only basic/no Dutch.
-- If a job explicitly requires fluent/advanced Dutch (C1/C2 or "native Dutch"), reduce the score significantly (by 2-3 points).
-- If a job is English-friendly or does not mention Dutch requirements, this is a positive signal.
-- Jobs requiring only basic Dutch (A1-B1) or no Dutch are fine.
+Candidate preferences:
+- Ideally based in Amsterdam or Utrecht (Netherlands). Remote roles are also great.
+- If a job is in a different Dutch city (e.g. Rotterdam, Den Haag), it's acceptable but slightly less ideal — do not penalise heavily.
+- Jobs outside the Netherlands that are not remote should be scored lower.
+
+Language criteria:
+- Sophie's Dutch is B1 (intermediate). She is a native English speaker.
+- Prefer jobs conducted primarily in English or requiring only basic/no Dutch.
+- If a job explicitly requires fluent/advanced Dutch (C1/C2 or "native Dutch"), reduce the score by 2-3 points.
+- English-friendly or no Dutch requirement is a positive signal.
 
 Score how well this job matches the candidate's CV on a scale from 0 to 10:
 - 0-3: Poor match (different field, missing required skills, or requires advanced Dutch)
 - 4-6: Partial match (related field but gaps, or Dutch level may be an issue)
-- 7-8: Good match (most skills align, English-friendly role)
-- 9-10: Excellent match (near-perfect fit, English-language role)
+- 7-8: Good match (most skills align, English-friendly, right location)
+- 9-10: Excellent match (near-perfect fit, English role, Amsterdam/Utrecht/remote)
 
 Respond ONLY with valid JSON in this exact format:
 {{"score": <number>, "reason": "<one sentence explanation>"}}"""
