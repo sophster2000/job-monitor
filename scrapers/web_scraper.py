@@ -25,48 +25,43 @@ def _wait_and_pause(page: Page, ms: int = 3000) -> None:
 
 def _extract_whoknowsginny(page: Page) -> list[dict]:
     _wait_and_pause(page)
+    NAV_SLUGS = {"jobs", "pricing", "events", "create", "about-us", "conditions", "privacy", "explore"}
     jobs = []
     seen = set()
     for link in page.query_selector_all("a[href]"):
         href = link.get_attribute("href") or ""
-        if "/job" not in href or href in seen:
+        if href.startswith("http") or not href.startswith("/"):
+            continue
+        parts = [p for p in href.strip("/").split("/") if p]
+        # Job links are exactly /<company>/<job-slug>/<id> (3 segments)
+        if len(parts) != 3 or parts[0] in NAV_SLUGS or href in seen:
             continue
         seen.add(href)
-        url = href if href.startswith("http") else f"https://www.whoknowsginny.com{href}"
-        title = link.inner_text().strip().split("\n")[0]
-        if title:
-            jobs.append({"source": "WhoKnowsGinny", "title": title, "url": url, "company": "", "location": "", "description": ""})
+        url = f"https://www.whoknowsginny.com{href}"
+        title = parts[1].replace("-", " ").title()
+        company = parts[0].replace("-", " ").title()
+        jobs.append({"source": "WhoKnowsGinny", "title": title, "url": url, "company": company, "location": "Netherlands", "description": ""})
     return jobs
 
 
 def _extract_born4jobs(page: Page) -> list[dict]:
-    # Dismiss cookie popup if present
-    try:
-        page.click("button:has-text('Toestemming')", timeout=5000)
-    except Exception:
-        pass
-    _wait_and_pause(page, 2000)
+    # Born4Jobs is a recruitment agency — navigate to their vacancies page
+    page.goto("https://born4jobs.nl/en/vacatures/", timeout=30000, wait_until="domcontentloaded")
+    _wait_and_pause(page, 3000)
     jobs = []
     seen = set()
     for link in page.query_selector_all("a[href]"):
         href = link.get_attribute("href") or ""
-        if "born4jobs.nl" not in href and not href.startswith("/"):
+        if href in seen or not href:
             continue
-        if href in seen:
+        if not re.search(r"/(vacature|vacancy)/", href, re.I):
             continue
-        text = link.inner_text().strip()
-        # Job links typically have multi-line text with a title
-        lines = [l.strip() for l in text.split("\n") if l.strip()]
-        if not lines or len(lines[0]) < 5:
+        text = link.inner_text().strip().split("\n")[0]
+        if not text or len(text) < 5:
             continue
-        # Skip nav/footer links
-        if href in ("/en/", "/", "") or "cv-templates" in href or "het-team" in href:
-            continue
-        # Only include links that look like job listings (contain a date or multi-word title)
-        if len(lines) >= 2 or (len(lines) == 1 and len(lines[0].split()) >= 3):
-            seen.add(href)
-            url = href if href.startswith("http") else f"https://born4jobs.nl{href}"
-            jobs.append({"source": "Born4Jobs", "title": lines[0], "url": url, "company": "", "location": "Netherlands", "description": ""})
+        seen.add(href)
+        url = href if href.startswith("http") else f"https://born4jobs.nl{href}"
+        jobs.append({"source": "Born4Jobs", "title": text, "url": url, "company": "", "location": "Netherlands", "description": ""})
     return jobs
 
 
@@ -76,8 +71,8 @@ def _extract_showbizjobs(page: Page) -> list[dict]:
     seen = set()
     for link in page.query_selector_all("a[href]"):
         href = link.get_attribute("href") or ""
-        # Showbiz job links contain /jobs/ in the path
-        if "/jobs/" not in href or href in seen:
+        # Actual job detail pages contain /jid- in the URL
+        if "/jid-" not in href or href in seen:
             continue
         text = link.inner_text().strip().split("\n")[0]
         if not text or len(text) < 5:
@@ -111,14 +106,13 @@ def _extract_iamexpat(page: Page) -> list[dict]:
     seen = set()
     for link in page.query_selector_all("a[href]"):
         href = link.get_attribute("href") or ""
-        # Job detail pages have path depth: /career/jobs-netherlands/<category>/<title>/<id>
+        # Job detail pages: /career/jobs-netherlands/<category>/<title>/<id>
         if not re.match(r"^/career/jobs-netherlands/[^/]+/[^/]+/[^/]+", href):
             continue
         if href in seen:
             continue
         seen.add(href)
         text = link.inner_text().strip()
-        # Title is the first line
         title = text.split("\n")[0].strip()
         if not title:
             continue
