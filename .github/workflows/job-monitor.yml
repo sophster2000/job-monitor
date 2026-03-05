@@ -1,0 +1,49 @@
+name: Job Monitor
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours
+  workflow_dispatch:          # allow manual trigger from GitHub UI
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: playwright install chromium --with-deps
+
+      - name: Restore seen_jobs database
+        uses: actions/cache@v4
+        with:
+          path: seen_jobs.db
+          key: seen-jobs-db-${{ github.run_number }}
+          restore-keys: |
+            seen-jobs-db-
+
+      - name: Run job monitor
+        env:
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
+          RELEVANCE_THRESHOLD: ${{ vars.RELEVANCE_THRESHOLD || '7.0' }}
+          CV_CONTENT: ${{ secrets.CV_CONTENT }}
+          LINKEDIN_SEARCH_URLS: ${{ vars.LINKEDIN_SEARCH_URLS }}
+          INDEED_QUERY: ${{ vars.INDEED_QUERY }}
+          INDEED_LOCATION: ${{ vars.INDEED_LOCATION }}
+        run: python main.py
