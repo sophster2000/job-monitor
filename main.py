@@ -7,7 +7,7 @@ and sends WhatsApp notifications via Twilio for relevant matches.
 """
 import sys
 from scrapers import scrape_linkedin, scrape_indeed, scrape_url
-from matcher import is_relevant
+from matcher import is_relevant, is_dutch_only
 from notifier import send_whatsapp
 from storage import is_seen, mark_seen, make_id
 from config import SCRAPE_URLS, RELEVANCE_THRESHOLD
@@ -29,6 +29,11 @@ def process_jobs(jobs: list[dict]) -> tuple[int, int]:
 
         title = job.get("title", "").strip()
         if not title:
+            continue
+
+        # Skip jobs written entirely in Dutch
+        if is_dutch_only(job):
+            print(f"  [dutch] Skipping Dutch-only listing: {title}")
             continue
 
         try:

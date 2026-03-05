@@ -3,16 +3,40 @@ Uses the Claude API to score each job listing against the user's CV.
 Returns a score from 0–10 and a short explanation.
 """
 import json
+import re
 import anthropic
 from config import ANTHROPIC_API_KEY, RELEVANCE_THRESHOLD
 
 _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
+# Common Dutch words — if the description is overwhelmingly these, it's Dutch-only
+_DUTCH_MARKERS = re.compile(
+    r"\b(wij|jij|zijn|heeft|voor|naar|een|het|van|met|wat|als|maar|ook|dan|bij|aan|dat|wordt|kan|bent|heb|onze|onze|zoeken|gevraagd|vereist|ervaring|werken|functie|vacature|solliciteer|bedrijf|omgeving|team|salaris|werkgever|fulltime|parttime)\b",
+    re.IGNORECASE,
+)
+_ENGLISH_MARKERS = re.compile(
+    r"\b(we|you|are|have|for|with|this|that|will|our|the|and|job|role|team|experience|required|looking|position|skills|company|please|apply|work|working)\b",
+    re.IGNORECASE,
+)
+
+
+def is_dutch_only(job: dict) -> bool:
+    """Return True if the job description appears to be Dutch-only."""
+    text = " ".join([
+        job.get("title", ""),
+        job.get("description", ""),
+    ])
+    if len(text.strip()) < 20:
+        return False  # Not enough text to decide — let it through
+    dutch_hits = len(_DUTCH_MARKERS.findall(text))
+    english_hits = len(_ENGLISH_MARKERS.findall(text))
+    # Consider Dutch-only if Dutch hits dominate and English is sparse
+    return dutch_hits > 5 and english_hits < 3
+
 
 def _load_cv() -> str:
     from config import CV_FILE
     import os
-    # Prefer env var, then file
     cv_env = os.getenv("CV_CONTENT", "")
     if cv_env:
         return cv_env
@@ -46,7 +70,7 @@ def score_job(job: dict) -> tuple[float, str]:
         f"Description:\n{job.get('description', 'No description available.')}"
     )
 
-    prompt = f"""You are a career advisor evaluating job fit.
+    prompt = f"""You are a career advisor evaluating job fit for Sophie Krall.
 
 CV:
 {cv}
@@ -58,11 +82,18 @@ Job Listing:
 
 ---
 
+Important language criteria:
+- Sophie's Dutch is B1 level (intermediate). She is a native English speaker.
+- Strongly prefer jobs that are conducted primarily in English or require only basic/no Dutch.
+- If a job explicitly requires fluent/advanced Dutch (C1/C2 or "native Dutch"), reduce the score significantly (by 2-3 points).
+- If a job is English-friendly or does not mention Dutch requirements, this is a positive signal.
+- Jobs requiring only basic Dutch (A1-B1) or no Dutch are fine.
+
 Score how well this job matches the candidate's CV on a scale from 0 to 10:
-- 0-3: Poor match (different field, missing required skills)
-- 4-6: Partial match (related field but gaps)
-- 7-8: Good match (most skills align)
-- 9-10: Excellent match (near-perfect fit)
+- 0-3: Poor match (different field, missing required skills, or requires advanced Dutch)
+- 4-6: Partial match (related field but gaps, or Dutch level may be an issue)
+- 7-8: Good match (most skills align, English-friendly role)
+- 9-10: Excellent match (near-perfect fit, English-language role)
 
 Respond ONLY with valid JSON in this exact format:
 {{"score": <number>, "reason": "<one sentence explanation>"}}"""
@@ -78,8 +109,6 @@ Respond ONLY with valid JSON in this exact format:
         data = json.loads(raw)
         return float(data["score"]), data["reason"]
     except (json.JSONDecodeError, KeyError):
-        # Try to extract score from raw text as fallback
-        import re
         match = re.search(r'"score"\s*:\s*(\d+(?:\.\d+)?)', raw)
         score = float(match.group(1)) if match else 0.0
         return score, raw
