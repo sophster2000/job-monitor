@@ -13,11 +13,11 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 # Twilio WhatsApp
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
-TWILIO_WHATSAPP_FROM = os.environ["TWILIO_WHATSAPP_FROM"]  # e.g. "whatsapp:+14155238886"
-TWILIO_WHATSAPP_TO = os.environ["TWILIO_WHATSAPP_TO"]      # e.g. "whatsapp:+64221231691"
+TWILIO_WHATSAPP_FROM = os.environ["TWILIO_WHATSAPP_FROM"]
+TWILIO_WHATSAPP_TO = os.environ["TWILIO_WHATSAPP_TO"]
 
 # Job matching
-RELEVANCE_THRESHOLD = float(os.getenv("RELEVANCE_THRESHOLD", "7.0"))
+RELEVANCE_THRESHOLD = float(os.getenv("RELEVANCE_THRESHOLD", "6.0"))
 
 # CV content (can be set as env var or loaded from file)
 CV_FILE = os.getenv("CV_FILE", "cv.txt")
@@ -48,7 +48,14 @@ JOB_KEYWORDS = [
     "film production",
     "television production",
     "entertainment coordinator",
+    "entertainment manager",
+    "entertainment industry",
     "comedy production",
+    "streaming",
+    "content production",
+    "talent coordinator",
+    "talent manager",
+    "press coordinator",
     # Festivals
     "film festival",
     "festival coordinator",
