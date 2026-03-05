@@ -34,6 +34,8 @@ JOB_KEYWORDS = [
     "publicist",
     "logistics coordinator",
     "producer",
+    "line producer",
+    "associate producer",
     "hospitality manager",
     "promotions coordinator",
     "targeted marketing",
@@ -47,6 +49,18 @@ JOB_KEYWORDS = [
     "television production",
     "entertainment coordinator",
     "comedy production",
+    # Festivals
+    "film festival",
+    "festival coordinator",
+    "festival producer",
+    "festival manager",
+    "festival programming",
+    # Hospitality
+    "hospitality coordinator",
+    "guest relations",
+    "venue coordinator",
+    "catering coordinator",
+    "hotel coordinator",
     # Communications & marketing
     "communications coordinator",
     "communications manager",
@@ -57,6 +71,12 @@ JOB_KEYWORDS = [
     "travel executive",
     "travel coordinator",
     "food and beverage coordinator",
+    # Sales (relevant to experience)
+    "sponsorship coordinator",
+    "account manager entertainment",
+    "business development events",
+    "partnerships coordinator",
+    "sales coordinator entertainment",
     # Wider net
     "social impact coordinator",
     "non-profit coordinator",
