@@ -90,10 +90,11 @@ Language criteria:
 - English-friendly or no Dutch requirement is a positive signal.
 
 Score how well this job matches the candidate's CV on a scale from 0 to 10:
-- 0-3: Poor match (different field, missing required skills, or requires advanced Dutch)
-- 4-6: Partial match (related field but gaps, or Dutch level may be an issue)
-- 7-8: Good match (most skills align, English-friendly, right location)
-- 9-10: Excellent match (near-perfect fit, English role, Amsterdam/Utrecht/remote)
+- 0-2: Very poor match (completely different field or requires advanced Dutch)
+- 3-5: Weak match (some relevance but significant gaps)
+- 6-7: Reasonable match (related field, transferable skills, worth considering)
+- 8-9: Strong match (most skills align, right location, English-friendly)
+- 10: Exceptional match (perfect fit)
 
 Respond ONLY with valid JSON in this exact format:
 {{"score": <number>, "reason": "<one sentence explanation>"}}"""
