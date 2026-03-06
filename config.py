@@ -98,6 +98,8 @@ JOB_KEYWORDS = [
     "experiential marketing",
     "live events",
     "touring coordinator",
+    "exhibition manager",
+    "meetings and events sales specialist",
 ]
 
 SEARCH_LOCATION = "Netherlands"
