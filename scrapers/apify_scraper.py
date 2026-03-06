@@ -9,12 +9,15 @@ from config import APIFY_API_TOKEN, LINKEDIN_SEARCH_URLS, INDEED_SEARCH_QUERIES
 APIFY_BASE = "https://api.apify.com/v2"
 TIMEOUT = 300  # seconds to wait for actor run
 
+# Correct actor IDs from Apify store
+LINKEDIN_ACTOR = "bebity/linkedin-jobs-scraper"   # BHzefUZlZRKWxkTck
+INDEED_ACTOR = "misceres/indeed-scraper"           # hMvNSpz3JnHgl5jkh
+
 
 def _run_actor(actor_id: str, input_payload: dict) -> list[dict]:
     """Run an Apify actor synchronously and return dataset items."""
     headers = {"Authorization": f"Bearer {APIFY_API_TOKEN}"}
 
-    # Start actor run
     resp = httpx.post(
         f"{APIFY_BASE}/acts/{actor_id}/runs",
         json=input_payload,
@@ -42,7 +45,6 @@ def _run_actor(actor_id: str, input_payload: dict) -> list[dict]:
         print(f"[Apify] Actor {actor_id} run ended with status: {status}")
         return []
 
-    # Fetch dataset
     dataset_id = status_resp.json()["data"]["defaultDatasetId"]
     items_resp = httpx.get(
         f"{APIFY_BASE}/datasets/{dataset_id}/items",
@@ -55,10 +57,10 @@ def _run_actor(actor_id: str, input_payload: dict) -> list[dict]:
 
 
 def scrape_linkedin() -> list[dict]:
-    """Scrape LinkedIn Jobs via Apify actor `apify/linkedin-jobs-scraper`."""
+    """Scrape LinkedIn Jobs via Apify actor bebity/linkedin-jobs-scraper."""
     print("[LinkedIn] Starting Apify scrape...")
     raw = _run_actor(
-        "apify/linkedin-jobs-scraper",
+        LINKEDIN_ACTOR,
         {
             "startUrls": [{"url": u} for u in LINKEDIN_SEARCH_URLS],
             "maxJobs": 50,
@@ -69,7 +71,7 @@ def scrape_linkedin() -> list[dict]:
         jobs.append({
             "source": "LinkedIn",
             "title": item.get("title", ""),
-            "company": item.get("companyName", ""),
+            "company": item.get("companyName", item.get("company", "")),
             "location": item.get("location", ""),
             "description": item.get("descriptionText", item.get("description", "")),
             "url": item.get("jobUrl", item.get("url", "")),
@@ -79,12 +81,12 @@ def scrape_linkedin() -> list[dict]:
 
 
 def scrape_indeed() -> list[dict]:
-    """Scrape Indeed via Apify actor `misceres/indeed-scraper`."""
+    """Scrape Indeed via Apify actor misceres/indeed-scraper."""
     print("[Indeed] Starting Apify scrape...")
     results = []
     for query_cfg in INDEED_SEARCH_QUERIES:
         raw = _run_actor(
-            "misceres/indeed-scraper",
+            INDEED_ACTOR,
             {
                 "position": query_cfg["query"],
                 "country": "NL",

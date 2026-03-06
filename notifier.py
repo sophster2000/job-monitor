@@ -5,10 +5,13 @@ from twilio.rest import Client
 from config import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, TWILIO_WHATSAPP_TO
 
 _client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+MAX_BODY = 1500  # Twilio WhatsApp limit is 1600 chars; leave headroom
 
 
 def send_message(body: str) -> None:
-    """Send a plain WhatsApp message."""
+    """Send a plain WhatsApp message, truncating if necessary."""
+    if len(body) > MAX_BODY:
+        body = body[:MAX_BODY - 3] + "..."
     _client.messages.create(
         from_=TWILIO_WHATSAPP_FROM,
         to=TWILIO_WHATSAPP_TO,
@@ -31,7 +34,9 @@ def send_whatsapp(job: dict, score: float, reason: str) -> None:
         lines.append(f"Company: {company}")
     if location:
         lines.append(f"Location: {location}")
-    lines.append(f"Why: {reason}")
+    # Truncate reason if needed
+    reason_truncated = reason[:300] + "..." if len(reason) > 300 else reason
+    lines.append(f"Why: {reason_truncated}")
     if url:
         lines.append(f"Link: {url}")
 
