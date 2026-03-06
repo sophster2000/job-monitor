@@ -62,17 +62,20 @@ JOB_KEYWORDS = [
     "festival producer",
     "festival manager",
     "festival programming",
-    # Hospitality
+    # Hospitality & hotels
     "hospitality coordinator",
     "guest relations",
     "venue coordinator",
     "catering coordinator",
     "hotel coordinator",
-    # Communications & marketing
+    "conference services manager",
+    # Communications & PR
     "communications coordinator",
     "communications manager",
     "global marketing",
     "PR coordinator",
+    "PR manager",
+    "production assistant",
     "food PR",
     # Travel & hospitality
     "travel executive",
@@ -85,10 +88,18 @@ JOB_KEYWORDS = [
     "partnerships coordinator",
     "sales coordinator entertainment",
     # Wider net
-    "social impact coordinator",
-    "non-profit coordinator",
-    "solutions coordinator",
-    "mid-level events",
+    "social impact",
+    "non-profit",
+    "wildlife conservation",
+    "National Geographic",
+    "documentary production",
+    "cultural programming",
+    "arts coordinator",
+    "museum coordinator",
+    "brand experience",
+    "experiential marketing",
+    "live events",
+    "touring coordinator",
 ]
 
 SEARCH_LOCATION = "Netherlands"
