@@ -94,8 +94,6 @@ JOB_KEYWORDS = [
     "National Geographic",
     "documentary production",
     "cultural programming",
-    "arts coordinator",
-    "museum coordinator",
     "brand experience",
     "experiential marketing",
     "live events",
