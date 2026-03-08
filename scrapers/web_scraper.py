@@ -199,6 +199,39 @@ EXTRACTORS = {
     "nationalevacaturebank.nl": _extract_nationalevacaturebank,
 }
 
+# Selectors tried in order when fetching a job detail page.
+_DESCRIPTION_SELECTORS = [
+    "main",
+    "article",
+    "[class*='description']",
+    "[class*='job-detail']",
+    "[class*='job-content']",
+    "[class*='vacancy']",
+    "[class*='content']",
+]
+_DESCRIPTION_MAX_CHARS = 3000
+
+
+def _fetch_description(page: Page, url: str) -> str:
+    """Visit a job detail page and return the main body text (up to 3 000 chars)."""
+    try:
+        page.goto(url, timeout=20000, wait_until="domcontentloaded")
+        page.wait_for_timeout(1500)
+        for selector in _DESCRIPTION_SELECTORS:
+            try:
+                el = page.query_selector(selector)
+                if el:
+                    text = el.inner_text().strip()
+                    if len(text) > 150:
+                        return text[:_DESCRIPTION_MAX_CHARS]
+            except Exception:
+                continue
+        # Fallback: join all paragraph text
+        paragraphs = [p.inner_text().strip() for p in page.query_selector_all("p") if p.inner_text().strip()]
+        return " ".join(paragraphs)[:_DESCRIPTION_MAX_CHARS]
+    except Exception:
+        return ""
+
 
 def scrape_url(url: str) -> list[dict]:
     domain = _domain(url)
@@ -214,6 +247,11 @@ def scrape_url(url: str) -> list[dict]:
         try:
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
             jobs = extractor(page) if extractor else _generic_extract(page, source)
+            if jobs:
+                print(f"[WebScraper] Fetching descriptions for {len(jobs)} jobs from {domain}...")
+                for job in jobs:
+                    if job.get("url"):
+                        job["description"] = _fetch_description(page, job["url"])
         except Exception as e:
             print(f"[WebScraper] Error scraping {url}: {e}")
             jobs = []
