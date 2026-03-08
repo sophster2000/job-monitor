@@ -10,8 +10,8 @@ APIFY_BASE = "https://api.apify.com/v2"
 TIMEOUT = 300  # seconds to wait for actor run
 
 # Correct actor IDs from Apify store
-LINKEDIN_ACTOR = "bebity/linkedin-jobs-scraper"   # BHzefUZlZRKWxkTck
-INDEED_ACTOR = "misceres/indeed-scraper"           # hMvNSpz3JnHgl5jkh
+LINKEDIN_ACTOR = "BHzefUZlZRKWxkTck"   # BHzefUZlZRKWxkTck
+INDEED_ACTOR = "hMvNSpz3JnHgl5jkh"           # hMvNSpz3JnHgl5jkh
 
 
 def _run_actor(actor_id: str, input_payload: dict) -> list[dict]:
@@ -57,7 +57,7 @@ def _run_actor(actor_id: str, input_payload: dict) -> list[dict]:
 
 
 def scrape_linkedin() -> list[dict]:
-    """Scrape LinkedIn Jobs via Apify actor bebity/linkedin-jobs-scraper."""
+    """Scrape LinkedIn Jobs via Apify actor BHzefUZlZRKWxkTck."""
     print("[LinkedIn] Starting Apify scrape...")
     raw = _run_actor(
         LINKEDIN_ACTOR,
@@ -81,7 +81,7 @@ def scrape_linkedin() -> list[dict]:
 
 
 def scrape_indeed() -> list[dict]:
-    """Scrape Indeed via Apify actor misceres/indeed-scraper."""
+    """Scrape Indeed via Apify actor hMvNSpz3JnHgl5jkh."""
     print("[Indeed] Starting Apify scrape...")
     results = []
     for query_cfg in INDEED_SEARCH_QUERIES:
