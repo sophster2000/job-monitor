@@ -49,4 +49,4 @@ jobs:
           TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
           RELEVANCE_THRESHOLD: ${{ vars.RELEVANCE_THRESHOLD || '6.0' }}
           CV_CONTENT: ${{ secrets.CV_CONTENT }}
-        run: python main.py
+        run: python -u main.py
