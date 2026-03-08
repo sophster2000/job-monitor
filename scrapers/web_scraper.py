@@ -19,6 +19,26 @@ def _wait_and_pause(page: Page, ms: int = 3000) -> None:
     page.wait_for_timeout(ms)
 
 
+_COOKIE_SELECTORS = [
+    "button:has-text('Akkoord')",
+    "button:has-text('Accepteer')",
+    "button:has-text('Alles accepteren')",
+    "button:has-text('Accept')",
+    "button:has-text('Accept all')",
+    "[id*='accept']",
+    "[class*='accept']",
+]
+
+
+def _accept_cookies(page: Page) -> None:
+    for selector in _COOKIE_SELECTORS:
+        try:
+            page.click(selector, timeout=2000)
+            return
+        except Exception:
+            continue
+
+
 # ---------------------------------------------------------------------------
 # Per-site extractors
 # ---------------------------------------------------------------------------
@@ -140,19 +160,7 @@ def _extract_englishjobsearch(page: Page) -> list[dict]:
 
 
 def _extract_nationalevacaturebank(page: Page) -> list[dict]:
-    # Accept cookie wall
-    for selector in [
-        "button:has-text('Akkoord')",
-        "button:has-text('Accepteer')",
-        "button:has-text('Alles accepteren')",
-        "[id*='accept']",
-        "[class*='accept']",
-    ]:
-        try:
-            page.click(selector, timeout=4000)
-            break
-        except Exception:
-            continue
+    _accept_cookies(page)
     _wait_and_pause(page, 4000)
     jobs = []
     seen = set()
@@ -160,7 +168,8 @@ def _extract_nationalevacaturebank(page: Page) -> list[dict]:
         href = link.get_attribute("href") or ""
         if href in seen:
             continue
-        if not re.search(r"/(vacature|vacancy)/", href, re.I):
+        # Exclude search/filter URLs — actual job pages have a slug after /vacature/
+        if not re.search(r"/(vacature|vacancy)/[^/?]+$", href, re.I):
             continue
         text = link.inner_text().strip().split("\n")[0]
         if not text or len(text) < 5:
@@ -217,6 +226,7 @@ def _fetch_description(page: Page, url: str) -> str:
     try:
         page.goto(url, timeout=20000, wait_until="domcontentloaded")
         page.wait_for_timeout(1500)
+        _accept_cookies(page)
         for selector in _DESCRIPTION_SELECTORS:
             try:
                 el = page.query_selector(selector)
@@ -252,6 +262,11 @@ def scrape_url(url: str) -> list[dict]:
                 for job in jobs:
                     if job.get("url"):
                         job["description"] = _fetch_description(page, job["url"])
+                before = len(jobs)
+                jobs = [j for j in jobs if "this job listing is closed" not in j.get("description", "").lower()]
+                dropped = before - len(jobs)
+                if dropped:
+                    print(f"[WebScraper] Dropped {dropped} closed listings from {domain}")
         except Exception as e:
             print(f"[WebScraper] Error scraping {url}: {e}")
             jobs = []
