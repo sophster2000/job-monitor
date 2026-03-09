@@ -1,0 +1,43 @@
+name: LinkedIn Daily Scrape
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # every day at 8am UTC
+  workflow_dispatch:
+
+jobs:
+  linkedin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore seen_jobs database
+        uses: actions/cache@v4
+        with:
+          path: seen_jobs.db
+          key: seen-jobs-db-${{ github.run_number }}
+          restore-keys: |
+            seen-jobs-db-
+
+      - name: Run LinkedIn scrape
+        env:
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
+          RELEVANCE_THRESHOLD: ${{ vars.RELEVANCE_THRESHOLD || '6.0' }}
+          CV_CONTENT: ${{ secrets.CV_CONTENT }}
+        run: python -u linkedin_only.py
